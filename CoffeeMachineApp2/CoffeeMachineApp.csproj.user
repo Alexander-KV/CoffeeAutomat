@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup />
+  <ItemGroup>
+    <Compile Update="Forms\AdminForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\BeverageCard.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Forms\CardTerminalView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Forms\CoffeeMachineControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Forms\CoinTrayView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Forms\MachineModule.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Forms\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\MenuModule.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Forms\MoneyButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Forms\OrderModule.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Forms\PaymentModule.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Forms\PreparationModule.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Forms\PreparationView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Forms\RoundedButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>
