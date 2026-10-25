@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using CoffeeMachineApp.Models;
+using CoffeeMachineApp.Storage;
 
 namespace CoffeeMachineApp.Forms
 {
@@ -16,6 +17,10 @@ namespace CoffeeMachineApp.Forms
         public event EventHandler DuplicateRequested;
         public event EventHandler RemoveRequested;
         private readonly Action<MachineConfiguration> _save;
+        private readonly AdminAccess _access;
+        private readonly CardSlotView _cardSlot;
+        private readonly ChangeTrayView _changeTray;
+        private readonly RoundedButton _copy;
         private readonly Label _title, _step, _summary, _total, _wallet, _message, _terminalTotal, _sugarText, _bayTitle, _bayText;
         private readonly FlowLayoutPanel _menu;
         private readonly RoundedButton _minus, _plus, _milk, _syrup, _next, _cancel, _cash, _card, _pay, _collect, _admin, _remove;
@@ -29,9 +34,9 @@ namespace CoffeeMachineApp.Forms
         private int _filter;
         private bool _error;
 
-        public CoffeeMachineControl(CoffeeMachine machine, Action<MachineConfiguration> save)
+        public CoffeeMachineControl(CoffeeMachine machine, Action<MachineConfiguration> save, AdminAccess access)
         {
-            Machine = machine; _save = save;
+            Machine = machine; _save = save; _access = access;
             AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96, 96);
             Size = new Size(640, 1000); Margin = new Padding(14, 8, 14, 24);
             BackColor = Color.FromArgb(232, 231, 220); Font = UiStyle.Regular;
@@ -84,14 +89,24 @@ namespace CoffeeMachineApp.Forms
             var terminal = new Panel { Bounds = new Rectangle(464, 100, 152, 640), BackColor = Color.FromArgb(35, 40, 35) };
             UiStyle.Round(terminal, 17); Controls.Add(terminal);
             terminal.Paint += PaintTerminal;
-            TextAt(terminal, "БЕСКОНТАКТНО", new Rectangle(8, 67, 136, 22), UiStyle.Small, Color.FromArgb(157, 169, 146)).TextAlign = ContentAlignment.MiddleCenter;
-            var display = new Panel { Bounds = new Rectangle(10, 103, 132, 105), BackColor = Color.FromArgb(19, 27, 22) }; UiStyle.Round(display, 8); terminal.Controls.Add(display);
+            _cardSlot = new CardSlotView { Bounds = new Rectangle(8, 5, 136, 132) };
+            _cardSlot.Click += (s,e) => Act(() =>
+            {
+                if (Machine.Card.IsInserted) { Machine.EjectCard(); Notify("Карта возвращена. Спасибо!"); }
+                else
+                {
+                    decimal refund = Machine.SelectPayment(true); Machine.InsertCard();
+                    Notify(refund > 0 ? $"Карта вставлена. Внесённые наличные возвращены: {refund:0.##} ₽." : "Карта вставлена. Нажмите «Оплатить».");
+                }
+            });
+            _cardSlot.AnimationFinished += (s,e) => RefreshView(); terminal.Controls.Add(_cardSlot);
+            var display = new Panel { Bounds = new Rectangle(10, 141, 132, 105), BackColor = Color.FromArgb(19, 27, 22) }; UiStyle.Round(display, 8); terminal.Controls.Add(display);
             TextAt(display, "К ОПЛАТЕ", new Rectangle(9, 6, 114, 18), UiStyle.Small, Color.FromArgb(138, 167, 131)).TextAlign = ContentAlignment.MiddleCenter;
             _terminalTotal = TextAt(display, "— ₽", new Rectangle(4, 27, 124, 37), UiStyle.Title, Color.FromArgb(183, 220, 162)); _terminalTotal.TextAlign = ContentAlignment.MiddleCenter;
             _wallet = TextAt(display, "Выберите кофе", new Rectangle(7, 68, 118, 32), UiStyle.Small, Color.FromArgb(138, 167, 131)); _wallet.TextAlign = ContentAlignment.MiddleCenter;
-            _cash = Place(terminal, "Наличные", new Rectangle(10, 223, 132, 38), (s,e) => SwitchPayment(false)); _cash.Dark = true;
-            _card = Place(terminal, "Демо-карта", new Rectangle(10, 267, 132, 38), (s,e) => SwitchPayment(true)); _card.Dark = true;
-            TextAt(terminal, "ВНЕСИТЕ КУПЮРУ", new Rectangle(10, 321, 132, 19), UiStyle.Small, Color.FromArgb(157, 169, 146)).TextAlign = ContentAlignment.MiddleCenter;
+            _cash = Place(terminal, "Наличные", new Rectangle(10, 252, 132, 32), (s,e) => SwitchPayment(false)); _cash.Dark = true;
+            _card = Place(terminal, "Банковская карта", new Rectangle(10, 290, 132, 32), (s,e) => SwitchPayment(true)); _card.Dark = true;
+            TextAt(terminal, "ВНЕСИТЕ КУПЮРУ", new Rectangle(10, 327, 132, 19), UiStyle.Small, Color.FromArgb(157, 169, 146)).TextAlign = ContentAlignment.MiddleCenter;
             int[] amounts = { 10, 50, 100, 500 };
             for (int i = 0; i < amounts.Length; i++)
             {
@@ -103,18 +118,27 @@ namespace CoffeeMachineApp.Forms
             TextAt(terminal, "Учебный терминал\nБез реального списания", new Rectangle(10, 509, 132, 40), UiStyle.Small, Color.FromArgb(137, 147, 129)).TextAlign = ContentAlignment.MiddleCenter;
             TextAt(terminal, "SECURE  /  COFFEE PAY", new Rectangle(10, 597, 132, 20), UiStyle.Small, Color.FromArgb(137, 147, 129)).TextAlign = ContentAlignment.MiddleCenter;
             _message = TextAt(this, "Готов к работе. Выберите свой кофе.", new Rectangle(33, 746, 574, 28), UiStyle.Regular, Color.FromArgb(170, 199, 147));
-            _dispenser = new PreparationView { Bounds = new Rectangle(32, 790, 260, 142), BackColor = Color.FromArgb(21, 27, 23) }; Controls.Add(_dispenser);
-            _bayTitle = TextAt(this, "Здесь появится ваш кофе", new Rectangle(318, 797, 280, 25), UiStyle.Bold, UiStyle.Ivory);
-            _bayText = TextAt(this, "Свежий помол. Точный рецепт.\nМаленькая пауза для большого дня.", new Rectangle(318, 826, 280, 38), UiStyle.Small, Color.FromArgb(157, 173, 148));
-            _collect = Place(this, "Забрать напиток", new Rectangle(316, 876, 282, 43), (s,e) => Act(() =>
+            _dispenser = new PreparationView { Bounds = new Rectangle(32, 790, 240, 142), BackColor = Color.FromArgb(21, 27, 23) }; Controls.Add(_dispenser);
+            _bayTitle = TextAt(this, "Ваш кофе", new Rectangle(282, 797, 156, 25), UiStyle.Bold, UiStyle.Ivory);
+            _bayText = TextAt(this, "Свежий помол.\nТочный рецепт.", new Rectangle(282, 826, 156, 40), UiStyle.Small, Color.FromArgb(157, 173, 148));
+            _collect = Place(this, "Забрать кофе", new Rectangle(280, 876, 160, 43), (s,e) => Act(() =>
             {
-                decimal change = Machine.Collect(); _timer.Stop();
-                Notify(change > 0 ? $"Приятного дня! Вместе с кофе вы получили {change:0.##} ₽ сдачи." : "Хороший кофе — хорошее начало. Приятного дня!");
+                Machine.CollectDrink(); _timer.Stop();
+                Notify(Machine.Change > 0 ? "Напиток получен. Заберите сдачу из лотка справа." : Machine.Card.IsInserted ? "Напиток получен. Заберите карту из терминала." : "Хороший кофе — хорошее начало. Приятного дня!");
             }), true); _collect.Dark = true;
+            _changeTray = new ChangeTrayView { Bounds = new Rectangle(450, 792, 154, 134) };
+            _changeTray.Click += (s,e) => Act(() => { decimal amount = Machine.CollectChange(); Notify($"Сдача {amount:0.##} ₽ получена." + (Machine.Order != null && !Machine.DrinkCollected ? " Не забудьте напиток." : " Приятного дня!")); });
+            Controls.Add(_changeTray);
             _admin = Place(this, "Настройки", new Rectangle(26, 952, 132, 30), OpenAdmin); _admin.Dark = true; _admin.Font = UiStyle.Small;
-            var copy = Place(this, "+ Копировать автомат", new Rectangle(168, 952, 226, 30), (s,e) => DuplicateRequested?.Invoke(this, EventArgs.Empty)); copy.Dark = true; copy.Font = UiStyle.Small;
+            _copy = Place(this, "+ Копировать автомат", new Rectangle(168, 952, 226, 30), (s,e) => { if (_access.IsAdmin) DuplicateRequested?.Invoke(this, EventArgs.Empty); }); _copy.Dark = true; _copy.Font = UiStyle.Small;
             _remove = Place(this, "Убрать автомат", new Rectangle(434, 952, 174, 30), (s,e) => RemoveRequested?.Invoke(this, EventArgs.Empty)); _remove.Dark = true; _remove.Font = UiStyle.Small;
-            _timer.Tick += Tick; BuildMenu(); RefreshView();
+            _timer.Tick += Tick; BuildMenu(); RefreshAccess();
+        }
+        public void RefreshAccess()
+        {
+            _admin.Visible = _copy.Visible = _remove.Visible = _access.IsAdmin;
+            Notify(_access.IsAdmin ? "Режим администратора. Покупки приостановлены." : "Готов к работе. Выберите свой кофе.");
+            RefreshView();
         }
         private static Label TextAt(Control parent, string text, Rectangle bounds, Font font, Color color)
         {
@@ -147,8 +171,6 @@ namespace CoffeeMachineApp.Forms
         {
             var g = e.Graphics; g.SmoothingMode = SmoothingMode.AntiAlias;
             var saved = g.Save(); g.ScaleTransform(((Control)sender).Width / 152f, ((Control)sender).Height / 640f);
-            using var pen = new Pen(UiStyle.Gold, 2.3f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
-            for (int i = 0; i < 3; i++) g.DrawArc(pen, 66 - i * 9, 22 - i * 7, 16 + i * 18, 26 + i * 14, -63, 126);
             UiStyle.FillRound(g, new Rectangle(23, 565, 106, 12), Color.FromArgb(14, 22, 17), 5);
             using var slot = new Pen(Color.FromArgb(104, 117, 94)); g.DrawLine(slot, 32, 571, 120, 571);
             g.Restore(saved);
@@ -189,16 +211,17 @@ namespace CoffeeMachineApp.Forms
         private void SwitchPayment(bool card) => Act(() =>
         {
             decimal refund = Machine.SelectPayment(card);
-            Notify(refund > 0 ? $"Внесённые наличные возвращены: {refund:0.##} ₽." : card ? "Демо-карта выбрана. Подтвердите оплату на терминале." : "Внесите купюры на терминале справа.");
+            Notify(refund > 0 ? $"Внесённые наличные возвращены: {refund:0.##} ₽." : card ? (Machine.Card.IsInserted ? "Карта принята. Подтвердите оплату на терминале." : "Нажмите на карту над терминалом, чтобы вставить её.") : "Внесите купюры на терминале справа.");
         });
         private void OpenAdmin(object sender, EventArgs e)
         {
+            if (!_access.IsAdmin) return;
             using (var form = new AdminForm(Machine.Configuration, config => { _save(config); Machine.UpdateConfiguration(config); })) form.ShowDialog(this);
             _title.Text = Machine.Configuration.Name; BuildMenu(); RefreshView(); Notify("Настройки загружены. Автомат готов к работе.");
         }
         private void Tick(object sender, EventArgs e)
         {
-            if (Machine.State == MachineState.Ready) { _dispenser.Advance(); return; }
+            if (Machine.State == MachineState.Ready) { if (!Machine.DrinkCollected) _dispenser.Advance(); else _timer.Stop(); return; }
             if (Machine.State != MachineState.Brewing) { _timer.Stop(); return; }
             _dispenser.Progress = _brewing.Elapsed.TotalSeconds / Machine.Order.Beverage.PrepareSeconds; _dispenser.Advance();
             var drink = Machine.Order.Beverage;
@@ -211,14 +234,15 @@ namespace CoffeeMachineApp.Forms
             };
             _bayTitle.Text = stage + "…";
             int remaining = Math.Max(0, (int)Math.Ceiling(drink.PrepareSeconds - _brewing.Elapsed.TotalSeconds));
-            _bayText.Text = $"{(int)(_dispenser.Progress * 100)}%  ·  осталось около {remaining} сек.\nВаш кофе почти у вас.";
+            _bayText.Text = $"{(int)(_dispenser.Progress * 100)}%  ·  {remaining} сек.\nГотовим ваш напиток";
             if (_dispenser.Progress >= 1) { Machine.FinishPreparing(); Notify("Готово! Заберите горячий напиток в нише выдачи."); RefreshView(); }
         }
         private void RefreshView()
         {
-            bool choosing = Machine.State == MachineState.Choosing, paying = Machine.State == MachineState.Paying, ready = Machine.State == MachineState.Ready;
+            bool customer = !_access.IsAdmin;
+            bool choosing = customer && Machine.State == MachineState.Choosing, paying = customer && Machine.State == MachineState.Paying, ready = customer && Machine.State == MachineState.Ready;
             var order = Machine.Order;
-            _step.Text = Machine.State switch { MachineState.Choosing => "01  ВЫБОР     ·     02  ОПЛАТА     ·     03  ГОТОВО", MachineState.Paying => "01  ВЫБРАНО     →     02  ОПЛАТА     ·     03  ГОТОВО", MachineState.Brewing => "01  ВЫБРАНО     ·     02  ОПЛАЧЕНО     →     ГОТОВИМ", _ => "ВАШ КОФЕ ГОТОВ. ХОРОШЕГО ДНЯ!" };
+            _step.Text = !customer ? "ОБСЛУЖИВАНИЕ · РЕЖИМ АДМИНИСТРАТОРА" : Machine.State switch { MachineState.Choosing => "01  ВЫБОР     ·     02  ОПЛАТА     ·     03  ГОТОВО", MachineState.Paying => "01  ВЫБРАНО     →     02  ОПЛАТА     ·     03  ГОТОВО", MachineState.Brewing => "01  ВЫБРАНО     ·     02  ОПЛАЧЕНО     →     ГОТОВИМ", _ => "ВАШ КОФЕ ГОТОВ. ХОРОШЕГО ДНЯ!" };
             for (int i = 0; i < _filters.Count; i++) { _filters[i].Selected = _filter == i; _filters[i].Enabled = choosing; }
             foreach (var pair in _cards) { pair.Key.Enabled = choosing && pair.Value.IsEnabled; pair.Key.Selected = order?.Beverage.Id == pair.Value.Id; }
             _summary.Text = order?.Beverage.Name ?? "Найдите свой любимый";
@@ -241,23 +265,28 @@ namespace CoffeeMachineApp.Forms
             _cancel.Enabled = (choosing && order != null) || paying; _cancel.Text = paying ? "← Назад" : "Сбросить";
             _cash.Enabled = _card.Enabled = paying; _cash.Selected = !Machine.UseCard; _card.Selected = Machine.UseCard;
             foreach (var note in _notes) note.Enabled = paying && !Machine.UseCard;
-            _pay.Enabled = paying && (Machine.UseCard ? Machine.Card.Balance >= order.Total : Machine.Cash.Inserted >= order.Total);
+            _cardSlot.Inserted = Machine.Card.IsInserted;
+            _cardSlot.Enabled = customer && !_cardSlot.IsAnimating && (paying || Machine.Card.IsInserted);
+            _pay.Enabled = paying && (Machine.UseCard ? Machine.Card.IsInserted && !_cardSlot.IsAnimating : Machine.Cash.Inserted >= order.Total);
             _terminalTotal.Text = order == null ? "— ₽" : $"{order.Total:0.##} ₽";
             _terminalTotal.Font = order?.Total >= 1000 ? UiStyle.CompactPrice : UiStyle.Title;
-            _wallet.Text = paying ? (Machine.UseCard ? $"Баланс {Machine.Card.Balance:0.##} ₽" + (Machine.Card.Balance < order.Total ? "\nНедостаточно средств" : "\nПодтвердите оплату") : $"Внесено {Machine.Cash.Inserted:0.##} ₽\nЕщё {Math.Max(0, order.Total - Machine.Cash.Inserted):0.##} ₽") : ready ? "ОПЛАЧЕНО\nПриятного дня" : Machine.State == MachineState.Brewing ? "ОПЛАЧЕНО\nГотовим ваш кофе" : "Выберите кофе\nна экране слева";
-            _admin.Enabled = _remove.Enabled = choosing && order == null; _collect.Enabled = ready;
-            _collect.Text = ready && Machine.Change > 0 ? $"Забрать кофе и {Machine.Change:0.##} ₽" : ready ? "Забрать мой кофе →" : "Здесь будет ваш кофе";
+            _wallet.Text = paying ? (Machine.UseCard ? (Machine.Card.IsInserted ? "Карта принята\nПодтвердите оплату" : "Вставьте карту\nв слот выше") : $"Внесено {Machine.Cash.Inserted:0.##} ₽\nЕщё {Math.Max(0, order.Total - Machine.Cash.Inserted):0.##} ₽") : Machine.Card.IsInserted ? "ОПЛАЧЕНО\nЗаберите карту" : ready ? "ОПЛАЧЕНО\nПриятного дня" : Machine.State == MachineState.Brewing ? "ОПЛАЧЕНО\nГотовим ваш кофе" : _access.IsAdmin ? "ОБСЛУЖИВАНИЕ" : "Выберите кофе\nна экране слева";
+            _admin.Enabled = _remove.Enabled = _copy.Enabled = _access.IsAdmin && order == null;
+            _collect.Enabled = ready && !Machine.DrinkCollected;
+            _collect.Text = ready && Machine.DrinkCollected ? "Кофе получен" : "Забрать кофе";
+            _changeTray.Amount = Machine.Change; _changeTray.Enabled = customer && Machine.Change > 0;
+            _dispenser.Visible = !Machine.DrinkCollected;
             _dispenser.Mode = Machine.State == MachineState.Brewing ? PreparationMode.Brewing : ready ? PreparationMode.Ready : PreparationMode.Idle;
             if (order != null) { _dispenser.LiquidColor = ColorTranslator.FromHtml(order.Beverage.LiquidColor); _dispenser.HasMilk = order.Beverage.HasMilk || order.ExtraMilk; }
             if (ready)
             {
-                _bayTitle.Text = order.Beverage.Name + " готов!";
-                _bayText.Text = Machine.Change > 0 ? $"Ваша сдача: {Machine.Change:0.##} ₽\nПолучите её вместе с напитком." : "Осторожно, горячо.\nЗаберите чашку и наслаждайтесь.";
+                _bayTitle.Text = Machine.DrinkCollected ? "Приятного дня!" : order.Beverage.Name;
+                _bayText.Text = Machine.DrinkCollected ? (Machine.Change > 0 ? "Заберите сдачу →" : "Заберите карту ↑") : "Ваш кофе готов.\nОсторожно, горячо.";
             }
             else if (Machine.State != MachineState.Brewing)
             {
-                _dispenser.Progress = 0; _bayTitle.Text = "Здесь появится ваш кофе";
-                _bayText.Text = "Свежий помол. Точный рецепт.\nМаленькая пауза для большого дня.";
+                _dispenser.Progress = 0; _bayTitle.Text = "Ваш кофе";
+                _bayText.Text = "Свежий помол.\nТочный рецепт.";
             }
             _message.ForeColor = _error ? Color.FromArgb(246, 165, 143) : Color.FromArgb(170, 199, 147);
             Invalidate();
@@ -265,6 +294,7 @@ namespace CoffeeMachineApp.Forms
         private void Notify(string text) { _error = false; _message.Text = text; }
         private void Act(Action action)
         {
+            if (_access.IsAdmin) { Notify("Для покупки выйдите из режима администратора."); RefreshView(); return; }
             try { _error = false; action(); }
             catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException) { _error = true; _message.Text = ex.Message; }
             RefreshView();
