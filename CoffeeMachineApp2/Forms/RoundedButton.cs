@@ -53,13 +53,19 @@ namespace CoffeeMachineApp.Forms
             var flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding;
             if (card)
             {
-                float scale = Width / 122f;
+                float scale = Math.Min(Width / 122f, Height / 90f);
+                int contentTop = Math.Max(0, (int)((Height - 90 * scale) / 2));
                 int imageWidth = (int)(66 * scale), imageHeight = (int)(44 * scale);
-                var imageRect = new Rectangle((Width - imageWidth) / 2, (int)(4 * scale), imageWidth, imageHeight);
-                if (Enabled) g.DrawImage(Image, imageRect); else ControlPaint.DrawImageDisabled(g, Image, imageRect.X, imageRect.Y, fill);
+                var imageRect = new Rectangle((Width - imageWidth) / 2, contentTop + (int)(4 * scale), imageWidth, imageHeight);
+                if (Enabled) g.DrawImage(Image, imageRect);
+                else if (imageWidth > 0 && imageHeight > 0)
+                {
+                    using var resized = new Bitmap(Image, imageRect.Size);
+                    ControlPaint.DrawImageDisabled(g, resized, imageRect.X, imageRect.Y, fill);
+                }
                 using var nameFont = new Font(Font.FontFamily, Font.Size * 0.89f, FontStyle.Bold);
                 using var detailFont = new Font(Font.FontFamily, Font.Size * 0.8f);
-                int y = (int)(49 * scale);
+                int y = contentTop + (int)(49 * scale);
                 TextRenderer.DrawText(g, Text, nameFont, new Rectangle(5, y, Width - 10, (int)(19 * scale)), ink, flags);
                 TextRenderer.DrawText(g, Enabled ? Detail + "  ·  " + Price : "Нет в продаже", detailFont,
                     new Rectangle(3, y + (int)(19 * scale), Width - 6, (int)(18 * scale)), Enabled ? UiStyle.Gray : ink, flags);

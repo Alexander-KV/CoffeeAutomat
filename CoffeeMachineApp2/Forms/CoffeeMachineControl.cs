@@ -22,7 +22,10 @@ namespace CoffeeMachineApp.Forms
         private readonly ChangeTrayView _changeTray;
         private readonly RoundedButton _copy;
         private readonly Label _title, _step, _summary, _total, _wallet, _message, _terminalTotal, _sugarText, _bayTitle, _bayText;
-        private readonly FlowLayoutPanel _menu;
+        private const int MenuColumns = 3, MenuRows = 2, MenuPageSize = MenuColumns * MenuRows;
+        private readonly TableLayoutPanel _menu;
+        private readonly RoundedButton _previousPage, _nextPage;
+        private readonly Label _pageLabel;
         private readonly RoundedButton _minus, _plus, _milk, _syrup, _next, _cancel, _cash, _card, _pay, _collect, _admin, _remove;
         private readonly List<RoundedButton> _notes = new List<RoundedButton>();
         private readonly List<RoundedButton> _filters = new List<RoundedButton>();
@@ -31,7 +34,7 @@ namespace CoffeeMachineApp.Forms
         private readonly Stopwatch _brewing = new Stopwatch();
         private readonly ToolTip _tips = new ToolTip { InitialDelay = 300, ReshowDelay = 100, AutoPopDelay = 8000 };
         private readonly PreparationView _dispenser;
-        private int _filter;
+        private int _filter, _page, _pageCount = 1;
         private bool _error;
 
         public CoffeeMachineControl(CoffeeMachine machine, Action<MachineConfiguration> save, AdminAccess access)
@@ -57,17 +60,46 @@ namespace CoffeeMachineApp.Forms
             TextAt(intro, "Пора на кофе.", new Rectangle(0, 18, 390, 38), UiStyle.Display, UiStyle.Ink);
             _step = TextAt(intro, "01  ВЫБОР     ·     02  ОПЛАТА     ·     03  ГОТОВО", new Rectangle(2, 61, 390, 18), UiStyle.Small, UiStyle.Gray);
             layout.Controls.Add(intro, 0, 0);
-            var filters = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false, Margin = Padding.Empty };
+            var filters = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = MenuColumns, RowCount = 1,
+                AutoSize = false, AutoScroll = false, GrowStyle = TableLayoutPanelGrowStyle.FixedSize, Margin = Padding.Empty };
+            filters.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             string[] labels = { "Всё меню", "Без молока", "С молоком" };
             for (int i = 0; i < labels.Length; i++)
             {
-                int index = i; var button = UiStyle.Button(labels[i], (s,e) => { _filter = index; BuildMenu(); RefreshView(); });
-                button.Width = 124; button.Height = 30; button.Font = UiStyle.Small; button.Margin = new Padding(1, 0, 5, 4);
-                filters.Controls.Add(button); _filters.Add(button);
+                filters.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / MenuColumns));
+                int index = i; var button = UiStyle.Button(labels[i], (s,e) => { _filter = index; _page = 0; BuildMenu(); RefreshView(); });
+                button.Dock = DockStyle.Fill; button.Font = UiStyle.Small; button.Margin = new Padding(4, 0, 4, 4);
+                filters.Controls.Add(button, i, 0); _filters.Add(button);
             }
             layout.Controls.Add(filters, 0, 1);
-            _menu = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoScroll = true, Margin = Padding.Empty, BackColor = UiStyle.Cream };
-            layout.Controls.Add(_menu, 0, 2);
+            var catalog = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2,
+                AutoSize = false, AutoScroll = false, GrowStyle = TableLayoutPanelGrowStyle.FixedSize, Margin = Padding.Empty };
+            catalog.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            catalog.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            catalog.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
+            _menu = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = MenuColumns, RowCount = MenuRows,
+                AutoSize = false, AutoScroll = false, GrowStyle = TableLayoutPanelGrowStyle.FixedSize,
+                Margin = Padding.Empty, BackColor = UiStyle.Cream };
+            for (int i = 0; i < MenuColumns; i++) _menu.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / MenuColumns));
+            for (int i = 0; i < MenuRows; i++) _menu.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / MenuRows));
+            catalog.Controls.Add(_menu, 0, 0);
+            var pager = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1,
+                AutoSize = false, AutoScroll = false, GrowStyle = TableLayoutPanelGrowStyle.FixedSize, Margin = Padding.Empty };
+            for (int i = 0; i < 3; i++) pager.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / 3));
+            pager.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            _previousPage = UiStyle.Button("← Назад", (s,e) => ChangePage(-1));
+            _nextPage = UiStyle.Button("Далее →", (s,e) => ChangePage(1));
+            foreach (var button in new[] { _previousPage, _nextPage })
+            {
+                button.Dock = DockStyle.Fill; button.Font = UiStyle.Small; button.Margin = new Padding(4, 3, 4, 1);
+            }
+            _previousPage.AccessibleName = "Предыдущая страница напитков";
+            _nextPage.AccessibleName = "Следующая страница напитков";
+            _pageLabel = new Label { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter,
+                Font = UiStyle.Small, ForeColor = UiStyle.Gray, AutoEllipsis = true, Margin = Padding.Empty };
+            pager.Controls.Add(_previousPage, 0, 0); pager.Controls.Add(_pageLabel, 1, 0); pager.Controls.Add(_nextPage, 2, 0);
+            catalog.Controls.Add(pager, 0, 1);
+            layout.Controls.Add(catalog, 0, 2);
             var summary = new Panel { Dock = DockStyle.Fill, Margin = Padding.Empty };
             _summary = TextAt(summary, "Найдите свой любимый", new Rectangle(3, 6, 263, 23), UiStyle.Bold, UiStyle.Ink);
             TextAt(summary, "Свежая чашка, приготовленная для вас", new Rectangle(3, 30, 277, 18), UiStyle.Small, UiStyle.Gray);
@@ -178,19 +210,43 @@ namespace CoffeeMachineApp.Forms
         private void BuildMenu()
         {
             _menu.SuspendLayout();
-            foreach (var b in _cards.Keys) { _tips.SetToolTip(b, null); b.Image?.Dispose(); b.Dispose(); }
-            _cards.Clear(); _menu.Controls.Clear();
-            var drinks = Machine.Configuration.Menu.Where(x => _filter == 0 || (_filter == 1 ? !x.HasMilk : x.HasMilk)).ToArray();
-            foreach (var drink in drinks)
+            try
             {
-                var b = new RoundedButton { Width = 122, Height = 90, Margin = new Padding(4), Font = UiStyle.Regular,
-                    Image = new Bitmap(ImageLoader.Load(drink), new Size(66, 44)), Text = drink.Name, Detail = drink.VolumeMl + " мл", Price = $"{drink.Price:0.##} ₽",
-                    AccessibleName = $"{drink.Name}, {drink.VolumeMl} мл, {drink.Price:0.##} рублей" };
-                string id = drink.Id; b.Click += (s,e) => Act(() => { Machine.Select(id); Notify(drink.Recipe); });
-                _tips.SetToolTip(b, drink.Name + "\n" + drink.Recipe); _cards.Add(b, drink); _menu.Controls.Add(b);
+                foreach (var b in _cards.Keys) { _tips.SetToolTip(b, null); b.Image?.Dispose(); }
+                foreach (Control control in _menu.Controls.Cast<Control>().ToArray()) control.Dispose();
+                _cards.Clear(); _menu.Controls.Clear();
+                var drinks = Machine.Configuration.Menu.Where(x => _filter == 0 || (_filter == 1 ? !x.HasMilk : x.HasMilk)).ToArray();
+                _pageCount = Math.Max(1, (drinks.Length + MenuPageSize - 1) / MenuPageSize);
+                _page = Math.Clamp(_page, 0, _pageCount - 1);
+                var page = drinks.Skip(_page * MenuPageSize).Take(MenuPageSize).ToArray();
+                for (int i = 0; i < page.Length; i++)
+                {
+                    var drink = page[i];
+                    var b = new RoundedButton { Dock = DockStyle.Fill, Margin = new Padding(LogicalToDeviceUnits(4)), Font = UiStyle.Regular,
+                        Image = new Bitmap(ImageLoader.Load(drink), new Size(132, 88)), Text = drink.Name, Detail = drink.VolumeMl + " мл", Price = $"{drink.Price:0.##} ₽",
+                        TabIndex = i, AccessibleName = $"{drink.Name}, {drink.VolumeMl} мл, {drink.Price:0.##} рублей" };
+                    string id = drink.Id; b.Click += (s,e) => Act(() => { Machine.Select(id); Notify(drink.Recipe); });
+                    _tips.SetToolTip(b, drink.Name + "\n" + drink.Recipe); _cards.Add(b, drink); _menu.Controls.Add(b, i % MenuColumns, i / MenuColumns);
+                }
+                if (drinks.Length == 0)
+                {
+                    var empty = new Label { Text = "В этой категории пока нет напитков.\nПопробуйте другую категорию.", Dock = DockStyle.Fill,
+                        TextAlign = ContentAlignment.MiddleCenter, Font = UiStyle.Regular, ForeColor = UiStyle.Gray,
+                        AutoEllipsis = true, Margin = Padding.Empty, Padding = new Padding(LogicalToDeviceUnits(12)) };
+                    _menu.Controls.Add(empty, 0, 0); _menu.SetColumnSpan(empty, MenuColumns); _menu.SetRowSpan(empty, MenuRows);
+                }
+                _pageLabel.Text = _pageCount > 1 ? $"{_page + 1} / {_pageCount}" : $"Напитков: {drinks.Length}";
+                _pageLabel.AccessibleName = $"Страница {_page + 1} из {_pageCount}. Всего напитков: {drinks.Length}";
+                _previousPage.Visible = _nextPage.Visible = _pageCount > 1;
             }
-            if (drinks.Length == 0) _menu.Controls.Add(new Label { Text = "В этой категории пока нет напитков.\nВыберите «Всё меню» или добавьте рецепт в настройках.", Width = 350, Height = 90, ForeColor = UiStyle.Gray, Padding = new Padding(12) });
-            _menu.ResumeLayout();
+            finally { _menu.ResumeLayout(true); }
+        }
+        private void ChangePage(int direction)
+        {
+            if (_access.IsAdmin || Machine.State != MachineState.Choosing) return;
+            int page = Math.Clamp(_page + direction, 0, _pageCount - 1);
+            if (page == _page) return;
+            _page = page; BuildMenu(); RefreshView();
         }
         private void Configure(int sugarDelta = 0, bool milk = false, bool syrup = false)
         {
@@ -244,6 +300,8 @@ namespace CoffeeMachineApp.Forms
             var order = Machine.Order;
             _step.Text = !customer ? "ОБСЛУЖИВАНИЕ · РЕЖИМ АДМИНИСТРАТОРА" : Machine.State switch { MachineState.Choosing => "01  ВЫБОР     ·     02  ОПЛАТА     ·     03  ГОТОВО", MachineState.Paying => "01  ВЫБРАНО     →     02  ОПЛАТА     ·     03  ГОТОВО", MachineState.Brewing => "01  ВЫБРАНО     ·     02  ОПЛАЧЕНО     →     ГОТОВИМ", _ => "ВАШ КОФЕ ГОТОВ. ХОРОШЕГО ДНЯ!" };
             for (int i = 0; i < _filters.Count; i++) { _filters[i].Selected = _filter == i; _filters[i].Enabled = choosing; }
+            _previousPage.Enabled = choosing && _page > 0;
+            _nextPage.Enabled = choosing && _page < _pageCount - 1;
             foreach (var pair in _cards) { pair.Key.Enabled = choosing && pair.Value.IsEnabled; pair.Key.Selected = order?.Beverage.Id == pair.Value.Id; }
             _summary.Text = order?.Beverage.Name ?? "Найдите свой любимый";
             _total.Text = order == null ? "— ₽" : $"{order.Total:0.##} ₽";
