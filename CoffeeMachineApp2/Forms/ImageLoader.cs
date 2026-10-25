@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using CoffeeMachineApp.Models;
+using CoffeeMachineApp.Storage;
 
 namespace CoffeeMachineApp.Forms
 {
@@ -14,6 +15,8 @@ namespace CoffeeMachineApp.Forms
     internal static class ImageLoader
     {
         private static readonly Dictionary<string, Image> Cache = new Dictionary<string, Image>();
+        private static readonly Image Placeholder = CreatePlaceholder();
+        public static string CustomImageDirectory => Path.Combine(Path.GetDirectoryName(JsonMachineStore.DefaultPath), "Images");
 
         public static Image Load(Beverage beverage)
         {
@@ -21,7 +24,7 @@ namespace CoffeeMachineApp.Forms
             if (Cache.TryGetValue(beverage.ImageFile, out image))
                 return image;
 
-            image = LoadFromDisk(beverage.ImageFile) ?? CreatePlaceholder();
+            image = LoadFromDisk(beverage.ImageFile) ?? Placeholder;
             Cache[beverage.ImageFile] = image;
             return image;
         }
@@ -30,7 +33,9 @@ namespace CoffeeMachineApp.Forms
         {
             try
             {
-                string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", fileName);
+                string path = Path.Combine(CustomImageDirectory, fileName);
+                if (!File.Exists(path))
+                    path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", fileName);
                 if (!File.Exists(path))
                     return null;
 

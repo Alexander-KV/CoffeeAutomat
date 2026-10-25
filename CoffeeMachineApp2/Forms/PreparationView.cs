@@ -81,7 +81,7 @@ namespace CoffeeMachineApp.Forms
         {
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(UiStyle.BackgroundOf(this));
+            g.Clear(BackColor);
 
             float w = Width, h = Height;
             if (w < 60 || h < 80)
@@ -97,6 +97,11 @@ namespace CoffeeMachineApp.Forms
             float cx = w / 2f;
             float bottom = h * 0.88f;
             float top = bottom - gh;
+
+            // Подсвеченный металлический поддон внутри тёмной ниши.
+            using (var tray = new Pen(Color.FromArgb(78, 96, 75), 1.2f))
+                for (int i = -4; i <= 4; i++)
+                    g.DrawLine(tray, cx + i * gw * 0.18f, bottom + 4, cx + i * gw * 0.18f + 8, bottom + 10);
 
             // тень под стаканом
             using (var shadow = new SolidBrush(Color.FromArgb(40, 90, 60, 40)))
@@ -239,14 +244,14 @@ namespace CoffeeMachineApp.Forms
             {
                 RectangleF track = new RectangleF(w * 0.1f, h - 12, w * 0.8f, 7);
                 using (GraphicsPath tp = UiStyle.RoundedRect(Rectangle.Round(track), 3))
-                using (var tb = new SolidBrush(Color.FromArgb(234, 228, 222)))
+                using (var tb = new SolidBrush(Color.FromArgb(50, 66, 52)))
                     g.FillPath(tb, tp);
                 float fw = track.Width * (float)_progress;
                 if (fw > 6)
                 {
                     RectangleF fillRect = new RectangleF(track.X, track.Y, fw, track.Height);
                     using (GraphicsPath fp = UiStyle.RoundedRect(Rectangle.Round(fillRect), 3))
-                    using (var fb = new SolidBrush(UiStyle.Brown))
+                    using (var fb = new SolidBrush(UiStyle.Gold))
                         g.FillPath(fb, fp);
                 }
             }

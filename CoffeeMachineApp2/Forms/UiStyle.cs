@@ -5,152 +5,57 @@ using System.Windows.Forms;
 
 namespace CoffeeMachineApp.Forms
 {
-    /// <summary>Общие цвета, шрифты и мелкие фабрики, чтобы не повторять код оформления.</summary>
     internal static class UiStyle
     {
-        public static readonly Color Brown = Color.FromArgb(111, 78, 55);
-        public static readonly Color DarkBrown = Color.FromArgb(59, 42, 32);
-        public static readonly Color Cream = Color.FromArgb(245, 240, 234);
-        public static readonly Color Line = Color.FromArgb(226, 218, 209);
-        public static readonly Color Gray = Color.FromArgb(125, 117, 110);
-        public static readonly Color Green = Color.FromArgb(46, 125, 50);
-        public static readonly Color Red = Color.FromArgb(198, 40, 40);
-
-        public static readonly Font Regular = new Font("Segoe UI", 10F);
-        public static readonly Font Bold = new Font("Segoe UI", 10F, FontStyle.Bold);
-        public static readonly Font Small = new Font("Segoe UI", 9F);
-        public static readonly Font Big = new Font("Segoe UI", 13F, FontStyle.Bold);
+        public static readonly Color Ink = Color.FromArgb(36, 43, 36);
+        public static readonly Color Forest = Color.FromArgb(41, 79, 57);
+        public static readonly Color Gold = Color.FromArgb(188, 151, 91);
+        public static readonly Color Ivory = Color.FromArgb(245, 241, 228);
+        public static readonly Color Line = Color.FromArgb(226, 225, 215);
+        public static readonly Color Brown = Color.FromArgb(143, 100, 62);
+        public static readonly Color DarkBrown = Ink;
+        public static readonly Color Cream = Color.FromArgb(248, 247, 240);
+        public static readonly Color Gray = Color.FromArgb(120, 126, 113);
+        public static readonly Color Green = Color.FromArgb(98, 168, 118);
+        public static readonly Color Red = Color.FromArgb(185, 75, 56);
+        public static readonly Font Regular = new Font("Segoe UI", 9.5F);
+        public static readonly Font Bold = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        public static readonly Font Small = new Font("Segoe UI", 8F);
         public static readonly Font Title = new Font("Segoe UI", 22F, FontStyle.Bold);
-
-        public static Color ParseColor(string hex)
-        {
-            return ColorTranslator.FromHtml(hex);
-        }
-
+        public static readonly Font CompactPrice = new Font("Segoe UI", 16F, FontStyle.Bold);
+        public static readonly Font Display = new Font("Georgia", 23F);
         public static GraphicsPath RoundedRect(Rectangle r, int radius)
         {
             int d = Math.Max(1, Math.Min(radius * 2, Math.Min(r.Width, r.Height)));
-            var path = new GraphicsPath();
-            path.AddArc(r.X, r.Y, d, d, 180, 90);
-            path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
-            path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
-            path.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
-            path.CloseFigure();
-            return path;
+            var p = new GraphicsPath();
+            p.AddArc(r.X, r.Y, d, d, 180, 90); p.AddArc(r.Right-d, r.Y, d, d, 270, 90);
+            p.AddArc(r.Right-d, r.Bottom-d, d, d, 0, 90); p.AddArc(r.X, r.Bottom-d, d, d, 90, 90);
+            p.CloseFigure(); return p;
         }
-
-        /// <summary>Скруглить углы элемента.</summary>
-        public static void ApplyRoundRegion(Control control, int radius)
+        public static void FillRound(Graphics g, Rectangle rect, Color color, int radius = 16)
+        { using var path = RoundedRect(rect, radius); using var brush = new SolidBrush(color); g.FillPath(brush, path); }
+        public static void Round(Control control, int radius = 16)
         {
-            if (control.Width < 4 || control.Height < 4)
-                return;
-
-            using (GraphicsPath path = RoundedRect(new Rectangle(0, 0, control.Width, control.Height), radius))
+            void Apply(object sender, EventArgs e)
             {
-                Region old = control.Region;
-                control.Region = new Region(path);
-                if (old != null) old.Dispose();
+                if (control.Width <= 2 || control.Height <= 2) return;
+                using var path = RoundedRect(control.ClientRectangle, radius * control.DeviceDpi / 96);
+                var old = control.Region; control.Region = new Region(path); old?.Dispose();
             }
+            control.Resize += Apply; Apply(control, EventArgs.Empty);
         }
-
-        /// <summary>Первый непрозрачный цвет фона у родителей (для сглаживания углов).</summary>
-        public static Color BackgroundOf(Control control)
+        public static Color BackgroundOf(Control c)
         {
-            Control c = control.Parent;
-            while (c != null)
-            {
-                if (c.BackColor.A == 255)
-                    return c.BackColor;
-                c = c.Parent;
-            }
+            for (var p = c.Parent; p != null; p = p.Parent) if (p.BackColor.A == 255) return p.BackColor;
             return Color.White;
         }
-
-        /// <summary>Перевести пиксели из "96 dpi" в реальные (для высоты строк списка).</summary>
-        public static int Dpi(Control control, int pixels)
+        public static Label Label(string text, int height = 26, bool bold = false)
+            => new Label { Text = text, Height = height, Dock = DockStyle.Top, AutoEllipsis = true,
+                TextAlign = ContentAlignment.MiddleLeft, ForeColor = Ink, Font = bold ? Bold : Regular };
+        public static RoundedButton Button(string text, EventHandler click, bool primary = false)
         {
-            using (Graphics g = control.CreateGraphics())
-                return (int)Math.Round(pixels * g.DpiY / 96f);
-        }
-
-        // ---------- фабрики элементов ----------
-
-        public static Label CreateLabel(string text, Font font, Color color, ContentAlignment align)
-        {
-            return new Label
-            {
-                Text = text,
-                Font = font,
-                ForeColor = color,
-                TextAlign = align,
-                AutoSize = false,
-                Dock = DockStyle.Fill,
-                Margin = Padding.Empty
-            };
-        }
-
-        /// <summary>Метка с абсолютными координатами (для простых окон).</summary>
-        public static Label CreateLabelAt(string text, int x, int y, int width, int height, Font font, Color color)
-        {
-            return new Label
-            {
-                Text = text,
-                Font = font,
-                ForeColor = color,
-                AutoSize = false,
-                Bounds = new Rectangle(x, y, width, height)
-            };
-        }
-
-        public static RoundedButton CreateButton(string text, bool primary)
-        {
-            return new RoundedButton
-            {
-                Text = text,
-                Primary = primary,
-                Dock = DockStyle.Fill,
-                Margin = new Padding(3)
-            };
-        }
-
-        /// <summary>
-        /// Вертикальный "стек": одна колонка и строки заданной высоты.
-        /// Высота 0 означает "занять всё оставшееся место".
-        /// </summary>
-        public static TableLayoutPanel CreateStack(params int[] rowHeights)
-        {
-            var table = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                RowCount = rowHeights.Length,
-                Margin = Padding.Empty
-            };
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            foreach (int height in rowHeights)
-                table.RowStyles.Add(height > 0 ? new RowStyle(SizeType.Absolute, height) : new RowStyle(SizeType.Percent, 100));
-            return table;
-        }
-
-        /// <summary>Горизонтальный ряд колонок. Ширина 0 означает "поровну делить остаток".</summary>
-        public static TableLayoutPanel CreateColumns(params int[] widths)
-        {
-            var table = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = widths.Length,
-                RowCount = 1,
-                Margin = Padding.Empty
-            };
-            table.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            foreach (int width in widths)
-                table.ColumnStyles.Add(width > 0 ? new ColumnStyle(SizeType.Absolute, width) : new ColumnStyle(SizeType.Percent, 100));
-            return table;
-        }
-
-        public static void SetRowHeight(TableLayoutPanel table, int row, int height)
-        {
-            table.RowStyles[row] = new RowStyle(SizeType.Absolute, height);
+            var b = new RoundedButton { Text = text, Primary = primary, Height = 38, Width = 150, Margin = new Padding(3), TabStop = true };
+            b.Click += click; return b;
         }
     }
 }

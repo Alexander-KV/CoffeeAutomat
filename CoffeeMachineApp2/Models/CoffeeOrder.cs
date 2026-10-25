@@ -1,31 +1,17 @@
-using System.Collections.Generic;
-using System.Linq;
+using System;
 
 namespace CoffeeMachineApp.Models
 {
-    /// <summary>Текущий заказ: список позиций (композиция).</summary>
-    public class CoffeeOrder : IPayable
+    public sealed record CoffeeOrder(Beverage Beverage, int Sugar = 0, bool ExtraMilk = false, string Syrup = "Без сиропа")
     {
-        private readonly List<OrderItem> _items = new List<OrderItem>();
-
-        public IReadOnlyList<OrderItem> Items => _items;
-        public bool IsEmpty => _items.Count == 0;
-
-        public void Add(OrderItem item)
+        public decimal Total => Beverage.Price + (Sugar > 2 ? 10 : 0) + (ExtraMilk ? 30 : 0) + (Syrup != "Без сиропа" ? 30 : 0);
+        public void Validate()
         {
-            // одинаковые позиции объединяем: количество увеличивается
-            OrderItem existing = _items.FirstOrDefault(i => i.HasSameSettings(item));
-            if (existing != null)
-                existing.Quantity += item.Quantity;
-            else
-                _items.Add(item);
+            if (Beverage == null) throw new ArgumentException("Выберите напиток.");
+            Beverage.Validate();
+            if (Sugar < 0 || Sugar > 4) throw new ArgumentException("Сахар: от 0 до 4 ложек.");
+            if (Syrup != "Без сиропа" && Syrup != "Ваниль" && Syrup != "Карамель")
+                throw new ArgumentException("Неизвестный сироп.");
         }
-
-        public void Remove(OrderItem item) => _items.Remove(item);
-
-        public void Clear() => _items.Clear();
-
-        /// <summary>Итого = сумма всех позиций.</summary>
-        public decimal GetPrice() => _items.Sum(i => i.GetPrice());
     }
 }
