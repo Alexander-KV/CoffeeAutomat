@@ -96,8 +96,9 @@ namespace CoffeeMachineApp.Forms.Modules
             // DispensingControl
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(21, 27, 23);
+            this.Size = new System.Drawing.Size(592, 156);
             this.Controls.Add(this.preparationView);
             this.Controls.Add(this.bayTitleLabel);
             this.Controls.Add(this.bayDescriptionLabel);
@@ -105,9 +106,7 @@ namespace CoffeeMachineApp.Forms.Modules
             this.Controls.Add(this.changeTrayView);
             this.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.Margin = new System.Windows.Forms.Padding(0);
-            this.MinimumSize = new System.Drawing.Size(416, 156);
             this.Name = "DispensingControl";
-            this.Size = new System.Drawing.Size(592, 156);
             this.ResumeLayout(false);
         }
     }

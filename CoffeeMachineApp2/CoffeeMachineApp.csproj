@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.WinForms.Designer.SDK" Version="1.6.0" PrivateAssets="all" />
     <EmbeddedResource Include="Assets/*.png" LogicalName="CoffeeMachineApp.Assets.%(Filename)%(Extension)" />
     <Compile Update="Forms/CoffeeMachineControl.cs"><SubType>UserControl</SubType></Compile>
     <Compile Update="Forms/MainForm.cs"><SubType>Form</SubType></Compile>

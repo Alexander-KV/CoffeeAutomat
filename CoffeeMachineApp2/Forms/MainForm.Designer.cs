@@ -108,7 +108,7 @@ namespace CoffeeMachineApp.Forms
             // machinePreview
             machinePreview.Name = "machinePreview";
             machinePreview.Location = new Point(28, 26);
-            machinePreview.Size = new Size(640, 1000);
+            machinePreview.Size = new Size(480, 750);
             machinePreview.Margin = new Padding(14, 8, 14, 24);
             // footer
             footer.Name = "footer";

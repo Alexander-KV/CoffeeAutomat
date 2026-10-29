@@ -130,7 +130,7 @@ namespace CoffeeMachineApp.Forms
             brewingTimer.Tick += Tick;
             // CoffeeMachineControl
             AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             BackColor = System.Drawing.Color.FromArgb(232, 231, 220);
             Font = new System.Drawing.Font("Segoe UI", 9.5F);
             Margin = new System.Windows.Forms.Padding(14, 8, 14, 24);

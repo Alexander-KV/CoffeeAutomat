@@ -313,13 +313,12 @@ namespace CoffeeMachineApp.Forms.Modules
             this.beverageTips.ReshowDelay = 100;
             this.beverageTips.AutoPopDelay = 8000;
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(248, 247, 240);
             this.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.Controls.Add(this.rootLayout);
-            this.MinimumSize = new System.Drawing.Size(300, 320);
-            this.Name = "BeverageMenuControl";
             this.Size = new System.Drawing.Size(398, 412);
+            this.Controls.Add(this.rootLayout);
+            this.Name = "BeverageMenuControl";
             this.rootLayout.ResumeLayout(false);
             this.introPanel.ResumeLayout(false);
             this.filtersLayout.ResumeLayout(false);
@@ -331,4 +330,3 @@ namespace CoffeeMachineApp.Forms.Modules
         }
     }
 }
-

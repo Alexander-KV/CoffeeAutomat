@@ -7,7 +7,7 @@ namespace CoffeeMachineApp.Forms
 {
     // Дизайнер корневого UserControl выполняет отрисовку его базового класса.
     // Поэтому корпус виден и при редактировании, и при запуске.
-    public class CoffeeMachineSurface : UserControl
+    public class CoffeeMachineSurface : ScalableControl
     {
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Ready { get; set; }

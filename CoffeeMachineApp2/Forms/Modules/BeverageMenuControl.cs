@@ -8,7 +8,7 @@ using CoffeeMachineApp.Models;
 namespace CoffeeMachineApp.Forms.Modules
 {
     /// <summary>Меню одного автомата. Показывает напитки и сообщает выбранный ID владельцу.</summary>
-    public partial class BeverageMenuControl : UserControl
+    public partial class BeverageMenuControl : ScalableControl
     {
         private const int PageSize = 6;
         private readonly RoundedButton[] _cards;
@@ -28,6 +28,7 @@ namespace CoffeeMachineApp.Forms.Modules
             // Без пользовательских файлов и модели автомата: предварительный вид для конструктора VS.
             _beverages = MachineConfiguration.CreateDefault().Menu;
             BuildPage();
+            CompleteLayout();
         }
 
         public void SetMenu(IReadOnlyList<Beverage> menu)

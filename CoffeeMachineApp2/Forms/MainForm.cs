@@ -14,6 +14,9 @@ namespace CoffeeMachineApp.Forms
         private readonly IMachineStore _store;
         private readonly AdminAccess _access;
         private readonly List<CoffeeMachineControl> _machines = new List<CoffeeMachineControl>();
+        private Action<CoffeeMachineControl> _applyLayout;
+        private Size _preferredMachineSize;
+        private int _preferredDpi;
         // Конструктор VS: только интерфейс, без файлов и авторизации.
         public MainForm()
         {
@@ -23,11 +26,14 @@ namespace CoffeeMachineApp.Forms
         {
             _store = store;
             _access = new AdminAccess(Path.Combine(Path.GetDirectoryName(JsonMachineStore.DefaultPath), "admin-access.json"));
-            // На этом месте дизайнер показывает тот же UserControl, что используется при запуске.
-            _floor.Controls.Remove(machinePreview);
-            machinePreview.Dispose();
-            machinePreview = null;
+            // Используем сам элемент из Designer: его настройки больше не теряются.
+            _preferredMachineSize = machinePreview.Size;
+            _preferredDpi = DeviceDpi;
+            _applyLayout = machinePreview.CreateLayoutTemplate();
             foreach (var config in _store.Load()) Attach(config);
+            _floor.SizeChanged += (s, e) => FitMachines();
+            Shown += (s, e) => FitMachines();
+            FitMachines();
             RefreshMode();
             FormClosing += (s,e) =>
             {
@@ -40,11 +46,36 @@ namespace CoffeeMachineApp.Forms
 
         private void Attach(MachineConfiguration configuration)
         {
-            var machine = new CoffeeMachine(configuration); var view = new CoffeeMachineControl(machine, SaveConfiguration, _access);
+            var machine = new CoffeeMachine(configuration);
+            var view = machinePreview;
+            if (view != null) machinePreview = null;
+            else
+            {
+                view = new CoffeeMachineControl();
+                _applyLayout(view);
+                _floor.Controls.Add(view);
+            }
+            view.Bind(machine, SaveConfiguration, _access);
             view.DuplicateRequested += (s,e) => AddMachine(machine.Configuration);
             view.RemoveRequested += (s,e) => RemoveMachine(view);
-            _machines.Add(view); _floor.Controls.Add(view);
+            _machines.Add(view);
             view.RefreshAccess();
+            FitMachines();
+        }
+
+        private void FitMachines()
+        {
+            if (_preferredMachineSize.IsEmpty || _machines.Count == 0) return;
+            int height = Math.Max(1, _floor.ClientSize.Height - _floor.Padding.Vertical
+                - _machines[0].Margin.Vertical - SystemInformation.HorizontalScrollBarHeight);
+            int width = Math.Max(1, _floor.ClientSize.Width - _floor.Padding.Horizontal - _machines[0].Margin.Horizontal);
+            double scale = Math.Min((double)DeviceDpi / _preferredDpi,
+                Math.Min((double)height / _preferredMachineSize.Height, (double)width / _preferredMachineSize.Width));
+            var size = new Size(Math.Max(1, (int)Math.Round(_preferredMachineSize.Width * scale)),
+                Math.Max(1, (int)Math.Round(_preferredMachineSize.Height * scale)));
+            _floor.SuspendLayout();
+            try { foreach (var view in _machines) if (view.Size != size) view.Size = size; }
+            finally { _floor.ResumeLayout(true); }
         }
         private void AddMachine(MachineConfiguration source)
         {

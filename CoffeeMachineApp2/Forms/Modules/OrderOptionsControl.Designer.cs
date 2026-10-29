@@ -191,13 +191,12 @@ namespace CoffeeMachineApp.Forms.Modules
             this.actionsPanel.Controls.Add(this.paymentButton);
             this.paymentButton.Primary = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(248, 247, 240);
             this.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.Controls.Add(this.rootLayout);
-            this.MinimumSize = new System.Drawing.Size(300, 180);
-            this.Name = "OrderOptionsControl";
             this.Size = new System.Drawing.Size(398, 204);
+            this.Controls.Add(this.rootLayout);
+            this.Name = "OrderOptionsControl";
             this.rootLayout.ResumeLayout(false);
             this.summaryPanel.ResumeLayout(false);
             this.optionsPanel.ResumeLayout(false);
@@ -206,4 +205,3 @@ namespace CoffeeMachineApp.Forms.Modules
         }
     }
 }
-

@@ -4,7 +4,7 @@ using System.Windows.Forms;
 using CoffeeMachineApp.Models;
 namespace CoffeeMachineApp.Forms.Modules
 {
-    public partial class CoffeeSelectionControl : UserControl
+    public partial class CoffeeSelectionControl : ScalableControl
     {
         public event EventHandler<string> BeverageSelected;
         public event EventHandler<int> SugarChanged;
@@ -19,6 +19,7 @@ namespace CoffeeMachineApp.Forms.Modules
             orderModule.SyrupChanged += (s,e) => SyrupChanged?.Invoke(this,e);
             orderModule.PaymentRequested += (s,e) => PaymentRequested?.Invoke(this,e);
             orderModule.CancelRequested += (s,e) => CancelRequested?.Invoke(this,e);
+            CompleteLayout();
         }
         public void SetMenu(IReadOnlyList<Beverage> menu) => menuModule.SetMenu(menu);
         public void ShowState(CoffeeOrder order, MachineState state, bool administrator)

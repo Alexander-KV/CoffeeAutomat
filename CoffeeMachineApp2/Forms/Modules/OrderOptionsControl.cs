@@ -5,7 +5,7 @@ using CoffeeMachineApp.Models;
 namespace CoffeeMachineApp.Forms.Modules
 {
     /// <summary>Параметры выбранной порции. Только отображение и события, без изменения модели.</summary>
-    public partial class OrderOptionsControl : UserControl
+    public partial class OrderOptionsControl : ScalableControl
     {
         private CoffeeOrder _order;
         private MachineState _state = MachineState.Choosing;
@@ -21,6 +21,7 @@ namespace CoffeeMachineApp.Forms.Modules
         {
             InitializeComponent();
             ShowState(null, MachineState.Choosing, false);
+            CompleteLayout();
         }
 
         public void ShowState(CoffeeOrder order, MachineState state, bool administrator)
@@ -33,7 +34,7 @@ namespace CoffeeMachineApp.Forms.Modules
             bool editable = choosing && order != null;
             summaryLabel.Text = order?.Beverage.Name ?? "Найдите свой любимый";
             totalLabel.Text = order == null ? "— ₽" : $"{order.Total:0.##} ₽";
-            totalLabel.Font = order?.Total >= 1000 ? UiStyle.CompactPrice : UiStyle.Title;
+            SetDisplayFont(totalLabel, order?.Total >= 1000 ? UiStyle.CompactPrice : UiStyle.Title);
             sugarLabel.Text = $"Сахар {order?.Sugar ?? 0} / 4";
             minusButton.Enabled = editable && order.Sugar > 0;
             plusButton.Enabled = editable && order.Sugar < 4;

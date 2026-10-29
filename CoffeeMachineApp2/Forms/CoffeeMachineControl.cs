@@ -10,8 +10,35 @@ namespace CoffeeMachineApp.Forms
 {
     /// <summary>Переставляемые модули задаются в Designer; этот класс связывает их с моделью.</summary>
     [ToolboxItem(true)]
+    [Designer("CoffeeMachineApp.Forms.CoffeeMachineDesigner, CoffeeMachineApp")]
     public partial class CoffeeMachineControl : CoffeeMachineSurface
     {
+        [Category("Модули"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public Modules.CoffeeSelectionControl SelectionModule => selectionModule;
+        [Category("Модули"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public Modules.PaymentControl PaymentModule => paymentModule;
+        [Category("Модули"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public Modules.DispensingControl DispensingModule => dispensingModule;
+
+        // Сохраняет раскладку из MainForm для дополнительных автоматов.
+        internal Action<CoffeeMachineControl> CreateLayoutTemplate()
+        {
+            Size size = Size;
+            var menu = selectionModule.Bounds;
+            var payment = paymentModule.Bounds;
+            var dispensing = dispensingModule.Bounds;
+            var margin = Margin;
+            return target =>
+            {
+                target.Size = size;
+                target.Margin = margin;
+                target.selectionModule.Bounds = menu;
+                target.paymentModule.Bounds = payment;
+                target.dispensingModule.Bounds = dispensing;
+                target.CompleteLayout();
+            };
+        }
+
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CoffeeMachine Machine { get; private set; }
         public event EventHandler DuplicateRequested;
@@ -55,6 +82,7 @@ namespace CoffeeMachineApp.Forms
             dispensingModule.ShowState(preview, false);
             selectionModule.LocationChanged += ModuleBoundsChanged;
             selectionModule.SizeChanged += ModuleBoundsChanged;
+            CompleteLayout();
         }
 
         public CoffeeMachineControl(CoffeeMachine machine, Action<MachineConfiguration> save, AdminAccess access) : this()

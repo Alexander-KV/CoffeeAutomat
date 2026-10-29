@@ -9,7 +9,7 @@ namespace CoffeeMachineApp.Forms.Modules
 {
     /// <summary>Ниша выдачи: отображает чашку и сдачу, передаёт действия владельцу автомата.</summary>
     [DefaultEvent(nameof(DrinkCollected))]
-    public partial class DispensingControl : UserControl
+    public partial class DispensingControl : ScalableControl
     {
         private bool _ready;
 
@@ -27,6 +27,7 @@ namespace CoffeeMachineApp.Forms.Modules
                 ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             InitializeComponent();
             UpdateRoundedRegion();
+            CompleteLayout();
         }
 
         public void ShowState(CoffeeMachine machine, bool administrator)

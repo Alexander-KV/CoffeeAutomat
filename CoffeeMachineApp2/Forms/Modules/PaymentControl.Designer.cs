@@ -230,8 +230,9 @@ namespace CoffeeMachineApp.Forms.Modules
             // PaymentControl
             //
             AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             BackColor = System.Drawing.Color.FromArgb(35, 40, 35);
+            Size = new System.Drawing.Size(152, 640);
             Controls.Add(_cardSlot);
             Controls.Add(_display);
             Controls.Add(_cash);
@@ -245,9 +246,7 @@ namespace CoffeeMachineApp.Forms.Modules
             Controls.Add(_trainingCaption);
             Controls.Add(_secureCaption);
             Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            MinimumSize = new System.Drawing.Size(152, 640);
             Name = "PaymentControl";
-            Size = new System.Drawing.Size(152, 640);
             _display.ResumeLayout(false);
             ResumeLayout(false);
         }
