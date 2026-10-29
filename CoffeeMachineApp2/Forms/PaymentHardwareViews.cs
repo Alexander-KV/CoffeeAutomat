@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -12,8 +13,10 @@ namespace CoffeeMachineApp.Forms
     {
         private readonly Timer _animation = new Timer { Interval = 16 };
         private double _position, _target;
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsAnimating => Math.Abs(_position - _target) > .005;
         public event EventHandler AnimationFinished;
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Inserted
         {
             get => _target == 1;
@@ -77,6 +80,7 @@ namespace CoffeeMachineApp.Forms
         private decimal[] _pieces = Array.Empty<decimal>();
         private float _phase = 1;
         private bool _collecting;
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public decimal Amount
         {
             get => _amount;

@@ -50,6 +50,18 @@ namespace CoffeeMachineApp.Forms
             }
         }
 
+        public static Image LoadEmbedded(Beverage beverage)
+        {
+            string key = "embedded:" + beverage.ImageFile;
+            if (Cache.TryGetValue(key, out var image)) return image;
+            using var stream = typeof(ImageLoader).Assembly.GetManifestResourceStream("CoffeeMachineApp.Assets." + beverage.ImageFile);
+            if (stream == null) return Placeholder;
+            using var loaded = Image.FromStream(stream);
+            image = new Bitmap(loaded);
+            Cache[key] = image;
+            return image;
+        }
+
         private static Image CreatePlaceholder()
         {
             var bitmap = new Bitmap(300, 225);
