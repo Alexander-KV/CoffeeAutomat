@@ -2,6 +2,8 @@ namespace CoffeeMachineApp.Forms.Modules
 {
     partial class DispensingControl
     {
+        private System.Windows.Forms.TableLayoutPanel dispensingLayout;
+        private System.Windows.Forms.TableLayoutPanel detailsLayout;
         private System.ComponentModel.IContainer components = null;
         private CoffeeMachineApp.Forms.PreparationView preparationView;
         private System.Windows.Forms.Label bayTitleLabel;
@@ -25,6 +27,10 @@ namespace CoffeeMachineApp.Forms.Modules
             this.bayDescriptionLabel = new System.Windows.Forms.Label();
             this.collectButton = new CoffeeMachineApp.Forms.RoundedButton();
             this.changeTrayView = new CoffeeMachineApp.Forms.ChangeTrayView();
+            dispensingLayout = new System.Windows.Forms.TableLayoutPanel();
+            detailsLayout = new System.Windows.Forms.TableLayoutPanel();
+            dispensingLayout.SuspendLayout();
+            detailsLayout.SuspendLayout();
             this.SuspendLayout();
             //
             // preparationView
@@ -99,14 +105,40 @@ namespace CoffeeMachineApp.Forms.Modules
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(21, 27, 23);
             this.Size = new System.Drawing.Size(592, 156);
-            this.Controls.Add(this.preparationView);
-            this.Controls.Add(this.bayTitleLabel);
-            this.Controls.Add(this.bayDescriptionLabel);
-            this.Controls.Add(this.collectButton);
-            this.Controls.Add(this.changeTrayView);
             this.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.Margin = new System.Windows.Forms.Padding(0);
             this.Name = "DispensingControl";
+            dispensingLayout.Name = "dispensingLayout";
+            dispensingLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+            dispensingLayout.ColumnCount = 3;
+            dispensingLayout.RowCount = 1;
+            dispensingLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            dispensingLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 32F));
+            dispensingLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 28F));
+            dispensingLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            detailsLayout.Name = "detailsLayout";
+            detailsLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+            detailsLayout.ColumnCount = 1;
+            detailsLayout.RowCount = 3;
+            detailsLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            detailsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            detailsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            detailsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            Padding = new System.Windows.Forms.Padding(8);
+            preparationView.Dock = System.Windows.Forms.DockStyle.Fill;
+            changeTrayView.Dock = System.Windows.Forms.DockStyle.Fill;
+            bayTitleLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            bayDescriptionLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            collectButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            detailsLayout.Controls.Add(bayTitleLabel, 0, 0);
+            detailsLayout.Controls.Add(bayDescriptionLabel, 0, 1);
+            detailsLayout.Controls.Add(collectButton, 0, 2);
+            dispensingLayout.Controls.Add(preparationView, 0, 0);
+            dispensingLayout.Controls.Add(detailsLayout, 1, 0);
+            dispensingLayout.Controls.Add(changeTrayView, 2, 0);
+            Controls.Add(dispensingLayout);
+            detailsLayout.ResumeLayout(false);
+            dispensingLayout.ResumeLayout(false);
             this.ResumeLayout(false);
         }
     }

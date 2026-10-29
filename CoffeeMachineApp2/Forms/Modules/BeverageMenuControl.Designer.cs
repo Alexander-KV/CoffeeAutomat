@@ -83,7 +83,7 @@ namespace CoffeeMachineApp.Forms.Modules
             this.rootLayout.Padding = System.Windows.Forms.Padding.Empty;
             this.rootLayout.Name = "rootLayout";
             this.rootLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.rootLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 82F));
+            this.rootLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
             this.rootLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
             this.rootLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.rootLayout.Location = new System.Drawing.Point(0, 0);
@@ -94,6 +94,7 @@ namespace CoffeeMachineApp.Forms.Modules
             this.introPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.introPanel.Margin = System.Windows.Forms.Padding.Empty;
             this.introPanel.Size = new System.Drawing.Size(398, 82);
+            this.introPanel.MinimumSize = new System.Drawing.Size(0, 82);
             this.introPanel.Name = "introPanel";
             this.brandLabel.Text = "СВЕЖИЕ ЗЁРНА. ВАШ МОМЕНТ.";
             this.brandLabel.Name = "brandLabel";

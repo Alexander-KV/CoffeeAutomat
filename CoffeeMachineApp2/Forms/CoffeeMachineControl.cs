@@ -10,35 +10,8 @@ namespace CoffeeMachineApp.Forms
 {
     /// <summary>Переставляемые модули задаются в Designer; этот класс связывает их с моделью.</summary>
     [ToolboxItem(true)]
-    [Designer("CoffeeMachineApp.Forms.CoffeeMachineDesigner, CoffeeMachineApp")]
-    public partial class CoffeeMachineControl : CoffeeMachineSurface
+    public partial class CoffeeMachineControl : UserControl
     {
-        [Category("Модули"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Modules.CoffeeSelectionControl SelectionModule => selectionModule;
-        [Category("Модули"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Modules.PaymentControl PaymentModule => paymentModule;
-        [Category("Модули"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Modules.DispensingControl DispensingModule => dispensingModule;
-
-        // Сохраняет раскладку из MainForm для дополнительных автоматов.
-        internal Action<CoffeeMachineControl> CreateLayoutTemplate()
-        {
-            Size size = Size;
-            var menu = selectionModule.Bounds;
-            var payment = paymentModule.Bounds;
-            var dispensing = dispensingModule.Bounds;
-            var margin = Margin;
-            return target =>
-            {
-                target.Size = size;
-                target.Margin = margin;
-                target.selectionModule.Bounds = menu;
-                target.paymentModule.Bounds = payment;
-                target.dispensingModule.Bounds = dispensing;
-                target.CompleteLayout();
-            };
-        }
-
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CoffeeMachine Machine { get; private set; }
         public event EventHandler DuplicateRequested;
@@ -80,9 +53,6 @@ namespace CoffeeMachineApp.Forms
             var preview = new CoffeeMachine(MachineConfiguration.CreateDefault());
             paymentModule.ShowState(preview, false);
             dispensingModule.ShowState(preview, false);
-            selectionModule.LocationChanged += ModuleBoundsChanged;
-            selectionModule.SizeChanged += ModuleBoundsChanged;
-            CompleteLayout();
         }
 
         public CoffeeMachineControl(CoffeeMachine machine, Action<MachineConfiguration> save, AdminAccess access) : this()
@@ -110,7 +80,6 @@ namespace CoffeeMachineApp.Forms
             Notify(_access.IsAdmin ? "Режим администратора. Покупки приостановлены." : "Готов к работе. Выберите свой кофе.");
             RefreshView();
         }
-        private void ModuleBoundsChanged(object sender, EventArgs e) => Invalidate();
 
         private void Configure(int sugarDelta = 0, bool milk = false, bool syrup = false)
         {
@@ -184,7 +153,6 @@ namespace CoffeeMachineApp.Forms
         private void RefreshView()
         {
             if (Machine == null) return;
-            Ready = Machine.State == MachineState.Ready;
             selectionModule.ShowState(Machine.Order, Machine.State, _access.IsAdmin);
             paymentModule.ShowState(Machine, _access.IsAdmin);
             dispensingModule.ShowState(Machine, _access.IsAdmin);

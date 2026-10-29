@@ -2,6 +2,7 @@ namespace CoffeeMachineApp.Forms.Modules
 {
     partial class PaymentControl
     {
+        private System.Windows.Forms.TableLayoutPanel paymentLayout;
         private System.ComponentModel.IContainer components = null;
         private CoffeeMachineApp.Forms.CardSlotView _cardSlot;
         private System.Windows.Forms.Panel _display;
@@ -43,6 +44,8 @@ namespace CoffeeMachineApp.Forms.Modules
             _pay = new CoffeeMachineApp.Forms.RoundedButton();
             _trainingCaption = new System.Windows.Forms.Label();
             _secureCaption = new System.Windows.Forms.Label();
+            paymentLayout = new System.Windows.Forms.TableLayoutPanel();
+            paymentLayout.SuspendLayout();
             _display.SuspendLayout();
             SuspendLayout();
             //
@@ -127,7 +130,7 @@ namespace CoffeeMachineApp.Forms.Modules
             _card.Name = "_card";
             _card.Size = new System.Drawing.Size(132, 32);
             _card.TabIndex = 3;
-            _card.Text = "Банковская карта";
+            _card.Text = "Карта";
             _card.Click += new System.EventHandler(CardClick);
             //
             // _notesCaption
@@ -233,20 +236,74 @@ namespace CoffeeMachineApp.Forms.Modules
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             BackColor = System.Drawing.Color.FromArgb(35, 40, 35);
             Size = new System.Drawing.Size(152, 640);
-            Controls.Add(_cardSlot);
-            Controls.Add(_display);
-            Controls.Add(_cash);
-            Controls.Add(_card);
-            Controls.Add(_notesCaption);
-            Controls.Add(_note10);
-            Controls.Add(_note50);
-            Controls.Add(_note100);
-            Controls.Add(_note500);
-            Controls.Add(_pay);
-            Controls.Add(_trainingCaption);
-            Controls.Add(_secureCaption);
             Font = new System.Drawing.Font("Segoe UI", 9.5F);
             Name = "PaymentControl";
+            paymentLayout.Name = "paymentLayout";
+            paymentLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+            paymentLayout.ColumnCount = 2;
+            paymentLayout.RowCount = 9;
+            paymentLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            paymentLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            Padding = new System.Windows.Forms.Padding(6);
+            paymentLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            paymentLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 90F));
+            paymentLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
+            paymentLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 18F));
+            paymentLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            paymentLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 36F));
+            paymentLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            paymentLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize, 0F));
+            paymentLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize, 0F));
+            _cardSlot.Dock = System.Windows.Forms.DockStyle.Fill;
+            _cardSlot.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_cardSlot, 0, 0);
+            paymentLayout.SetColumnSpan(_cardSlot, 2);
+            _display.Dock = System.Windows.Forms.DockStyle.Fill;
+            _display.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_display, 0, 1);
+            paymentLayout.SetColumnSpan(_display, 2);
+            _cash.Dock = System.Windows.Forms.DockStyle.Fill;
+            _cash.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_cash, 0, 2);
+            _card.Dock = System.Windows.Forms.DockStyle.Fill;
+            _card.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_card, 1, 2);
+            _notesCaption.Dock = System.Windows.Forms.DockStyle.Fill;
+            _notesCaption.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_notesCaption, 0, 3);
+            paymentLayout.SetColumnSpan(_notesCaption, 2);
+            _note10.Dock = System.Windows.Forms.DockStyle.Fill;
+            _note10.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_note10, 0, 4);
+            _note50.Dock = System.Windows.Forms.DockStyle.Fill;
+            _note50.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_note50, 1, 4);
+            _note100.Dock = System.Windows.Forms.DockStyle.Fill;
+            _note100.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_note100, 0, 5);
+            _note500.Dock = System.Windows.Forms.DockStyle.Fill;
+            _note500.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_note500, 1, 5);
+            _pay.Dock = System.Windows.Forms.DockStyle.Fill;
+            _pay.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_pay, 0, 6);
+            paymentLayout.SetColumnSpan(_pay, 2);
+            _trainingCaption.Dock = System.Windows.Forms.DockStyle.Fill;
+            _trainingCaption.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_trainingCaption, 0, 7);
+            paymentLayout.SetColumnSpan(_trainingCaption, 2);
+            _secureCaption.Dock = System.Windows.Forms.DockStyle.Fill;
+            _secureCaption.Margin = new System.Windows.Forms.Padding(2);
+            paymentLayout.Controls.Add(_secureCaption, 0, 8);
+            paymentLayout.SetColumnSpan(_secureCaption, 2);
+            _amountCaption.Dock = System.Windows.Forms.DockStyle.Top;
+            _amountCaption.Height = 18;
+            _wallet.Dock = System.Windows.Forms.DockStyle.Bottom;
+            _wallet.Height = 32;
+            _terminalTotal.Dock = System.Windows.Forms.DockStyle.Fill;
+            _terminalTotal.BringToFront();
+            Controls.Add(paymentLayout);
+            paymentLayout.ResumeLayout(false);
             _display.ResumeLayout(false);
             ResumeLayout(false);
         }

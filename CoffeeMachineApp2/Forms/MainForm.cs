@@ -14,9 +14,7 @@ namespace CoffeeMachineApp.Forms
         private readonly IMachineStore _store;
         private readonly AdminAccess _access;
         private readonly List<CoffeeMachineControl> _machines = new List<CoffeeMachineControl>();
-        private Action<CoffeeMachineControl> _applyLayout;
         private Size _preferredMachineSize;
-        private int _preferredDpi;
         // Конструктор VS: только интерфейс, без файлов и авторизации.
         public MainForm()
         {
@@ -28,8 +26,6 @@ namespace CoffeeMachineApp.Forms
             _access = new AdminAccess(Path.Combine(Path.GetDirectoryName(JsonMachineStore.DefaultPath), "admin-access.json"));
             // Используем сам элемент из Designer: его настройки больше не теряются.
             _preferredMachineSize = machinePreview.Size;
-            _preferredDpi = DeviceDpi;
-            _applyLayout = machinePreview.CreateLayoutTemplate();
             foreach (var config in _store.Load()) Attach(config);
             _floor.SizeChanged += (s, e) => FitMachines();
             Shown += (s, e) => FitMachines();
@@ -52,7 +48,6 @@ namespace CoffeeMachineApp.Forms
             else
             {
                 view = new CoffeeMachineControl();
-                _applyLayout(view);
                 _floor.Controls.Add(view);
             }
             view.Bind(machine, SaveConfiguration, _access);
@@ -63,19 +58,16 @@ namespace CoffeeMachineApp.Forms
             FitMachines();
         }
 
+        // Меняется только внешний размер. Внутри работают Dock и TableLayoutPanel.
         private void FitMachines()
         {
-            if (_preferredMachineSize.IsEmpty || _machines.Count == 0) return;
-            int height = Math.Max(1, _floor.ClientSize.Height - _floor.Padding.Vertical
-                - _machines[0].Margin.Vertical - SystemInformation.HorizontalScrollBarHeight);
-            int width = Math.Max(1, _floor.ClientSize.Width - _floor.Padding.Horizontal - _machines[0].Margin.Horizontal);
-            double scale = Math.Min((double)DeviceDpi / _preferredDpi,
-                Math.Min((double)height / _preferredMachineSize.Height, (double)width / _preferredMachineSize.Width));
-            var size = new Size(Math.Max(1, (int)Math.Round(_preferredMachineSize.Width * scale)),
-                Math.Max(1, (int)Math.Round(_preferredMachineSize.Height * scale)));
-            _floor.SuspendLayout();
-            try { foreach (var view in _machines) if (view.Size != size) view.Size = size; }
-            finally { _floor.ResumeLayout(true); }
+            if (_machines.Count == 0) return;
+            int height = _floor.ClientSize.Height - _floor.Padding.Vertical
+                - _machines[0].Margin.Vertical - SystemInformation.HorizontalScrollBarHeight;
+            int width = Math.Min(_preferredMachineSize.Width,
+                _floor.ClientSize.Width - _floor.Padding.Horizontal - _machines[0].Margin.Horizontal);
+            foreach (var view in _machines)
+                view.Size = new Size(Math.Max(view.MinimumSize.Width, width), Math.Max(view.MinimumSize.Height, height));
         }
         private void AddMachine(MachineConfiguration source)
         {

@@ -8,7 +8,7 @@ using CoffeeMachineApp.Models;
 namespace CoffeeMachineApp.Forms.Modules
 {
     /// <summary>Терминал оплаты: отображает модель и передаёт действия покупателя владельцу автомата.</summary>
-    public partial class PaymentControl : ScalableControl
+    public partial class PaymentControl : UserControl
     {
         public event EventHandler<bool> PaymentMethodSelected;
         public event EventHandler<int> CashInserted;
@@ -26,7 +26,13 @@ namespace CoffeeMachineApp.Forms.Modules
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             UiStyle.Round(this, 17);
             UiStyle.Round(_display, 8);
-            CompleteLayout();
+            SizeChanged += (s, e) => AdjustCaptions();
+            AdjustCaptions();
+        }
+
+        private void AdjustCaptions()
+        {
+            _trainingCaption.Visible = _secureCaption.Visible = Height >= LogicalToDeviceUnits(500);
         }
 
         public void ShowState(CoffeeMachine machine, bool administrator)
@@ -43,7 +49,7 @@ namespace CoffeeMachineApp.Forms.Modules
             _cardSlot.Enabled = customer && !_cardSlot.IsAnimating && (paying || machine.Card.IsInserted);
             _pay.Enabled = paying && (machine.UseCard ? machine.Card.IsInserted && !_cardSlot.IsAnimating : machine.Cash.Inserted >= order.Total);
             _terminalTotal.Text = order == null ? "— ₽" : $"{order.Total:0.##} ₽";
-            SetDisplayFont(_terminalTotal, order?.Total >= 1000 ? UiStyle.CompactPrice : UiStyle.Title);
+            _terminalTotal.Font = order?.Total >= 1000 ? UiStyle.CompactPrice : UiStyle.Title;
             _wallet.Text = paying ? (machine.UseCard ? (machine.Card.IsInserted ? "Карта принята\nПодтвердите оплату" : "Вставьте карту\nв слот выше") : $"Внесено {machine.Cash.Inserted:0.##} ₽\nЕщё {Math.Max(0, order.Total - machine.Cash.Inserted):0.##} ₽") : machine.Card.IsInserted ? "ОПЛАЧЕНО\nЗаберите карту" : ready ? "ОПЛАЧЕНО\nПриятного дня" : machine.State == MachineState.Brewing ? "ОПЛАЧЕНО\nГотовим ваш кофе" : administrator ? "ОБСЛУЖИВАНИЕ" : "Выберите кофе\nна экране слева";
         }
 
@@ -57,17 +63,5 @@ namespace CoffeeMachineApp.Forms.Modules
         private void PayClick(object sender, EventArgs e) => PayRequested?.Invoke(this, EventArgs.Empty);
         private void CardSlotAnimationFinished(object sender, EventArgs e) => CardAnimationFinished?.Invoke(this, EventArgs.Empty);
 
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var saved = g.Save();
-            g.ScaleTransform(Width / 152f, Height / 640f);
-            UiStyle.FillRound(g, new Rectangle(23, 565, 106, 12), Color.FromArgb(14, 22, 17), 5);
-            using var slot = new Pen(Color.FromArgb(104, 117, 94));
-            g.DrawLine(slot, 32, 571, 120, 571);
-            g.Restore(saved);
-        }
     }
 }

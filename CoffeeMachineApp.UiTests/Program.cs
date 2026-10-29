@@ -18,31 +18,34 @@ internal static class Program
             host.Controls.Add(machine);
             host.Show();
             Application.DoEvents();
-            machine.Size = new Size(640, 1000);
-            var baseline = machine.SelectionModule.Bounds;
-            var label = Find(machine.PaymentModule, "_terminalTotal");
-            float font = label.Font.Size;
-            foreach (var size in new[] { new Size(480, 750), new Size(320, 500), new Size(800, 1250), new Size(960, 1500), new Size(640, 1000) })
+            var price = Find(machine, "_terminalTotal");
+            float font = price.Font.Size;
+            foreach (var size in new[] { new Size(680, 860), new Size(600, 680), new Size(900, 1000), new Size(680, 860) })
             {
                 machine.Size = size;
                 Application.DoEvents();
-                float factor = size.Width / 640f;
-                Assert(Math.Abs(machine.SelectionModule.Width - baseline.Width * factor) <= 2, "Menu did not scale");
                 CheckModules(machine);
-                CheckContents(machine.SelectionModule);
-                CheckContents(machine.PaymentModule);
-                CheckContents(machine.DispensingModule);
-                Assert(Math.Abs(label.Font.Size - font * factor) < 0.1f, "Font did not scale");
-                // Refreshing price/payment must not reset the scaled font.
-                machine.PaymentModule.ShowState(new CoffeeMachine(MachineConfiguration.CreateDefault()), false);
-                Assert(Math.Abs(label.Font.Size - font * factor) < 0.1f, "ShowState reset font size");
+                CheckContents(Find(machine, "selectionModule"));
+                CheckContents(Find(machine, "paymentModule"));
+                CheckContents(Find(machine, "dispensingModule"));
+                Assert(Math.Abs(price.Font.Size - font) < 0.1f, "Resize changed readable font size");
             }
-            Assert(machine.SelectionModule.Bounds == baseline, "Resize round trip changed layout");
-            machine.PaymentModule.Location = new Point(470, 110);
-            machine.Size = new Size(320, 500);
-            Assert(machine.PaymentModule.Location == new Point(235, 55), "Edited position was lost");
-            machine.Size = new Size(640, 1000);
-            Assert(machine.PaymentModule.Location == new Point(470, 110), "Edited position drifted");
+            // Standard WinForms cell operations, no bespoke layout API.
+            var table = (TableLayoutPanel)Find(machine, "modulesLayout");
+            var menu = Find(machine, "selectionModule");
+            var payment = Find(machine, "paymentModule");
+            table.SuspendLayout();
+            table.Controls.Remove(menu);
+            table.Controls.Remove(payment);
+            table.Controls.Add(payment, 0, 0);
+            table.Controls.Add(menu, 1, 0);
+            table.ColumnStyles[0].Width = 30;
+            table.ColumnStyles[1].Width = 70;
+            table.ResumeLayout(true);
+            machine.Size = new Size(900, 1000);
+            Application.DoEvents();
+            Assert(payment.Left < menu.Left, "Standard cell swap was lost after resize");
+            CheckModules(machine);
             host.Hide();
 
             using var app = new MainForm(new MemoryStore());
@@ -58,7 +61,8 @@ internal static class Program
                 foreach (var view in machines)
                 {
                     CheckModules(view);
-                    Assert(view.Bottom <= floor.ClientSize.Height, "Machine is clipped vertically");
+                    Assert(view.Height >= view.MinimumSize.Height, "Minimum usable height was lost");
+                    if (view.Bottom > floor.ClientSize.Height) Assert(((ScrollableControl)floor).AutoScroll, "Small window must allow reaching the bottom");
                 }
             }
             string output = Path.Combine(Environment.CurrentDirectory, "artifacts", "ui");
@@ -66,7 +70,7 @@ internal static class Program
             using var bitmap = new Bitmap(app.Width, app.Height);
             app.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size));
             bitmap.Save(Path.Combine(output, "main-form.png"), ImageFormat.Png);
-            Console.WriteLine("PASS: module bounds, contents, fonts, resize round trip, edited positions, full form and two machines.");
+            Console.WriteLine("PASS: standard docking, cell swap, readable fonts, module bounds, full form and two machines.");
             return 0;
         }
         catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
@@ -74,12 +78,13 @@ internal static class Program
 
     private static void CheckModules(CoffeeMachineControl machine)
     {
-        Control[] modules = { machine.SelectionModule, machine.PaymentModule, machine.DispensingModule };
-        foreach (var module in modules)
-            Assert(machine.ClientRectangle.Contains(module.Bounds), module.Name + " outside cabinet");
-        for (int i = 0; i < modules.Length; i++)
-            for (int j = i + 1; j < modules.Length; j++)
-                Assert(!modules[i].Bounds.IntersectsWith(modules[j].Bounds), "Modules overlap");
+        Control[] modules = { Find(machine, "selectionModule"), Find(machine, "paymentModule"), Find(machine, "dispensingModule") };
+        var bounds = modules.Select(m => new Rectangle(machine.PointToClient(m.PointToScreen(Point.Empty)), m.Size)).ToArray();
+        foreach (var rectangle in bounds)
+            Assert(machine.ClientRectangle.Contains(rectangle), "Module outside cabinet");
+        for (int i = 0; i < bounds.Length; i++)
+            for (int j = i + 1; j < bounds.Length; j++)
+                Assert(!bounds[i].IntersectsWith(bounds[j]), "Modules overlap");
     }
     private static void CheckContents(Control parent)
     {
