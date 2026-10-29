@@ -21,6 +21,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Assets/*.png" LogicalName="CoffeeMachineApp.Assets.%(Filename)%(Extension)" />
     <Compile Update="Forms/CoffeeMachineControl.cs"><SubType>UserControl</SubType></Compile>
+    <Compile Update="Forms/MainForm.cs"><SubType>Form</SubType></Compile>
     <Compile Update="Forms/Modules/*Control.cs"><SubType>UserControl</SubType></Compile>
     <Compile Update="Forms/**/*.Designer.cs"><DependentUpon>$([System.String]::Copy('%(Filename)').Replace('.Designer', '')).cs</DependentUpon></Compile>
   </ItemGroup>

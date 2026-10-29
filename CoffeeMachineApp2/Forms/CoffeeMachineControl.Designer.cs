@@ -102,6 +102,7 @@ namespace CoffeeMachineApp.Forms
             adminButton.Name = "adminButton";
             adminButton.Size = new System.Drawing.Size(132, 30);
             adminButton.Text = "Настройки";
+            adminButton.Visible = false;
             adminButton.TabIndex = 3;
             adminButton.Click += OpenAdmin;
             // copyButton
@@ -111,6 +112,7 @@ namespace CoffeeMachineApp.Forms
             copyButton.Name = "copyButton";
             copyButton.Size = new System.Drawing.Size(226, 30);
             copyButton.Text = "+ Копировать автомат";
+            copyButton.Visible = false;
             copyButton.TabIndex = 4;
             copyButton.Click += CopyMachine;
             // removeButton
@@ -120,6 +122,7 @@ namespace CoffeeMachineApp.Forms
             removeButton.Name = "removeButton";
             removeButton.Size = new System.Drawing.Size(174, 30);
             removeButton.Text = "Убрать автомат";
+            removeButton.Visible = false;
             removeButton.TabIndex = 5;
             removeButton.Click += RemoveMachine;
             // brewingTimer
